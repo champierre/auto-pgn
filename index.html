@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>チェス棋譜自動記録 - マーカー読み取り</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>チェスピースマーカー読み取り</h1>
+
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="startCamera">カメラ起動</button>
+            <button id="stopCamera" disabled>カメラ停止</button>
+        </div>
+
+        <div class="status">
+            <h2>状態</h2>
+            <p id="statusText">カメラを起動してください</p>
+        </div>
+
+        <div class="detected-markers">
+            <h2>検出されたマーカー</h2>
+            <div id="markerList">マーカーが検出されていません</div>
+        </div>
+
+        <div class="info">
+            <h3>使い方</h3>
+            <ul>
+                <li>「カメラ起動」ボタンをクリックしてカメラを開始</li>
+                <li>チェスピースに貼り付けたArUcoマーカーをカメラに向ける</li>
+                <li>検出されたマーカーのIDと位置が表示されます</li>
+            </ul>
+        </div>
+    </div>
+
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()"></script>
+    <script src="script.js"></script>
+</body>
+</html>
