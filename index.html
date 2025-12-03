@@ -36,11 +36,14 @@
                 <li>「カメラ起動」ボタンをクリックしてカメラを開始</li>
                 <li>チェスピースに貼り付けたArUcoマーカーをカメラに向ける</li>
                 <li>検出されたマーカーのIDと位置が表示されます</li>
+                <li><a href="all-markers.html" target="_blank">全ピース用マーカー一覧（印刷用）</a> - 32個すべてのマーカーを一度に印刷</li>
+                <li><a href="marker-generator.html" target="_blank">マーカー生成ツール</a> - 個別にマーカーを作成</li>
             </ul>
         </div>
     </div>
 
-    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()"></script>
+    <script src="lib/cv.js"></script>
+    <script src="lib/aruco.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

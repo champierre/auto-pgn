@@ -3,16 +3,9 @@ let video;
 let canvas;
 let ctx;
 let stream = null;
-let isOpenCvReady = false;
+let detector = null;
 let animationId = null;
 let detectedMarkers = new Map(); // マーカーIDと検出時刻を保存
-
-// OpenCV.jsの読み込み完了時に呼ばれる
-function onOpenCvReady() {
-    isOpenCvReady = true;
-    updateStatus('OpenCV.js読み込み完了 - カメラを起動してください');
-    console.log('OpenCV.js is ready');
-}
 
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,13 +13,17 @@ document.addEventListener('DOMContentLoaded', () => {
     canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
 
+    // js-aruco2のディテクターを初期化（デフォルトでARUCO辞書を使用）
+    detector = new AR.Detector();
+
     const startButton = document.getElementById('startCamera');
     const stopButton = document.getElementById('stopCamera');
 
     startButton.addEventListener('click', startCamera);
     stopButton.addEventListener('click', stopCamera);
 
-    updateStatus('初期化中...');
+    updateStatus('準備完了 - カメラを起動してください');
+    console.log('js-aruco2 detector initialized');
 });
 
 // ステータステキストを更新
@@ -36,11 +33,6 @@ function updateStatus(message) {
 
 // カメラ起動
 async function startCamera() {
-    if (!isOpenCvReady) {
-        updateStatus('OpenCV.jsの読み込みを待っています...');
-        return;
-    }
-
     try {
         // カメラストリームを取得
         stream = await navigator.mediaDevices.getUserMedia({
@@ -106,42 +98,17 @@ function detectMarkers() {
         // ビデオフレームをキャンバスに描画
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-        // OpenCVでマーカー検出
-        const src = cv.imread(canvas);
-        const gray = new cv.Mat();
+        // キャンバスからImageDataを取得
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-        // グレースケール変換
-        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-
-        // ArUcoマーカー検出の準備
-        const dictionary = new cv.aruco_Dictionary(cv.DICT_4X4_50);
-        const markerCorners = new cv.MatVector();
-        const markerIds = new cv.Mat();
-        const rejectedCandidates = new cv.MatVector();
-        const parameters = new cv.aruco_DetectorParameters();
-
-        // マーカー検出
-        cv.detectMarkers(gray, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
+        // js-aruco2でマーカー検出
+        const markers = detector.detect(imageData);
 
         // 検出されたマーカーを描画
-        if (markerIds.rows > 0) {
-            cv.drawDetectedMarkers(src, markerCorners, markerIds);
+        drawMarkers(markers);
 
-            // マーカー情報を更新
-            updateDetectedMarkers(markerIds, markerCorners);
-        }
-
-        // 結果をキャンバスに表示
-        cv.imshow(canvas, src);
-
-        // メモリ解放
-        src.delete();
-        gray.delete();
-        dictionary.delete();
-        markerCorners.delete();
-        markerIds.delete();
-        rejectedCandidates.delete();
-        parameters.delete();
+        // マーカー情報を更新
+        updateDetectedMarkers(markers);
 
     } catch (error) {
         console.error('マーカー検出エラー:', error);
@@ -151,32 +118,62 @@ function detectMarkers() {
     animationId = requestAnimationFrame(detectMarkers);
 }
 
+// マーカーをキャンバスに描画
+function drawMarkers(markers) {
+    ctx.lineWidth = 3;
+
+    for (let i = 0; i < markers.length; i++) {
+        const marker = markers[i];
+        const corners = marker.corners;
+
+        // マーカーの輪郭を描画
+        ctx.strokeStyle = 'red';
+        ctx.beginPath();
+        ctx.moveTo(corners[0].x, corners[0].y);
+        for (let j = 1; j < corners.length; j++) {
+            ctx.lineTo(corners[j].x, corners[j].y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+
+        // マーカーIDを描画
+        const centerX = corners.reduce((sum, c) => sum + c.x, 0) / corners.length;
+        const centerY = corners.reduce((sum, c) => sum + c.y, 0) / corners.length;
+
+        ctx.fillStyle = 'red';
+        ctx.font = '20px Arial';
+        ctx.fillText('ID: ' + marker.id, centerX - 20, centerY - 10);
+
+        // 各コーナーに小さな円を描画
+        ctx.fillStyle = 'lime';
+        for (let j = 0; j < corners.length; j++) {
+            ctx.beginPath();
+            ctx.arc(corners[j].x, corners[j].y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+    }
+}
+
 // 検出されたマーカー情報を更新
-function updateDetectedMarkers(markerIds, markerCorners) {
+function updateDetectedMarkers(markers) {
     const currentTime = Date.now();
     const newMarkers = new Map();
 
-    for (let i = 0; i < markerIds.rows; i++) {
-        const id = markerIds.data32S[i];
+    // 検出されたマーカーを処理
+    for (let i = 0; i < markers.length; i++) {
+        const marker = markers[i];
+        const corners = marker.corners;
 
         // マーカーの中心座標を計算
-        const corners = markerCorners.get(i);
-        let centerX = 0;
-        let centerY = 0;
+        const centerX = Math.round(corners.reduce((sum, c) => sum + c.x, 0) / corners.length);
+        const centerY = Math.round(corners.reduce((sum, c) => sum + c.y, 0) / corners.length);
 
-        for (let j = 0; j < 4; j++) {
-            centerX += corners.data32F[j * 2];
-            centerY += corners.data32F[j * 2 + 1];
-        }
-
-        centerX = Math.round(centerX / 4);
-        centerY = Math.round(centerY / 4);
-
-        newMarkers.set(id, {
-            id: id,
+        newMarkers.set(marker.id, {
+            id: marker.id,
             x: centerX,
             y: centerY,
-            lastSeen: currentTime
+            lastSeen: currentTime,
+            corners: corners
         });
     }
 

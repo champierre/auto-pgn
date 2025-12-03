@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>チェスピース用マーカー一覧（印刷用）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1.3em;
+        }
+
+        .header p {
+            color: #666;
+            margin-bottom: 3px;
+            font-size: 0.9em;
+        }
+
+        .markers-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 8px;
+            padding-bottom: 3px;
+            border-bottom: 2px solid #667eea;
+            font-size: 1em;
+        }
+
+        .markers-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1.5cm);
+            gap: 0.4cm;
+            margin-bottom: 10px;
+        }
+
+        .marker-item {
+            text-align: center;
+        }
+
+        .marker-item svg {
+            width: 1.5cm;
+            height: 1.5cm;
+            border: 1px solid #ccc;
+            display: block;
+        }
+
+        .marker-item .marker-label {
+            font-size: 9px;
+            margin-top: 2px;
+            color: #333;
+            line-height: 1.2;
+        }
+
+        .marker-item .piece-name {
+            font-size: 8px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .print-button {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .print-button:hover {
+            background: #5568d3;
+        }
+
+        @media print {
+            body {
+                padding: 5mm;
+            }
+
+            .header {
+                margin-bottom: 5px;
+            }
+
+            .header h1 {
+                font-size: 1.1em;
+                margin-bottom: 3px;
+            }
+
+            .header p {
+                font-size: 0.8em;
+                margin-bottom: 2px;
+            }
+
+            .header p.no-print,
+            .print-button {
+                display: none;
+            }
+
+            .section {
+                page-break-inside: avoid;
+                margin-bottom: 8px;
+            }
+
+            .section h2 {
+                font-size: 0.9em;
+                margin-bottom: 5px;
+                padding-bottom: 2px;
+            }
+
+            .markers-grid {
+                gap: 0.3cm;
+                margin-bottom: 5px;
+            }
+
+            .marker-item .marker-label {
+                font-size: 7px;
+            }
+
+            .marker-item .piece-name {
+                font-size: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>チェスピース用ArUcoマーカー一覧</h1>
+        <p>マーカーサイズ: 1.5cm × 1.5cm（全32個分）</p>
+        <p class="no-print">準備完了 - 印刷ボタンをクリックしてください</p>
+    </div>
+
+    <div class="markers-container">
+        <button class="print-button" onclick="window.print()">印刷する</button>
+
+        <div class="section">
+            <h2>白のピース用マーカー（ID: 0-15）</h2>
+            <div class="markers-grid" id="whiteMarkers"></div>
+        </div>
+
+        <div class="section">
+            <h2>黒のピース用マーカー（ID: 16-31）</h2>
+            <div class="markers-grid" id="blackMarkers"></div>
+        </div>
+
+        <button class="print-button" onclick="window.print()">印刷する</button>
+    </div>
+
+    <script src="lib/cv.js"></script>
+    <script src="lib/aruco.js"></script>
+    <script>
+        // ピース名のマッピング
+        const pieceNames = {
+            // 白のピース (ID 0-15)
+            0: 'キング',
+            1: 'クイーン',
+            2: 'ルーク1',
+            3: 'ルーク2',
+            4: 'ビショップ1',
+            5: 'ビショップ2',
+            6: 'ナイト1',
+            7: 'ナイト2',
+            8: 'ポーン1',
+            9: 'ポーン2',
+            10: 'ポーン3',
+            11: 'ポーン4',
+            12: 'ポーン5',
+            13: 'ポーン6',
+            14: 'ポーン7',
+            15: 'ポーン8',
+            // 黒のピース (ID 16-31)
+            16: 'キング',
+            17: 'クイーン',
+            18: 'ルーク1',
+            19: 'ルーク2',
+            20: 'ビショップ1',
+            21: 'ビショップ2',
+            22: 'ナイト1',
+            23: 'ナイト2',
+            24: 'ポーン1',
+            25: 'ポーン2',
+            26: 'ポーン3',
+            27: 'ポーン4',
+            28: 'ポーン5',
+            29: 'ポーン6',
+            30: 'ポーン7',
+            31: 'ポーン8'
+        };
+
+        // js-aruco2を使用してマーカーを生成
+        function generateAllMarkers() {
+            const whiteMarkersGrid = document.getElementById('whiteMarkers');
+            const blackMarkersGrid = document.getElementById('blackMarkers');
+
+            try {
+                // ARUCOディクショナリを使用
+                const dictionary = new AR.Dictionary('ARUCO');
+
+                // 白のピース用マーカー（0-15）
+                for (let id = 0; id <= 15; id++) {
+                    const markerItem = createMarkerElement(id, dictionary);
+                    whiteMarkersGrid.appendChild(markerItem);
+                }
+
+                // 黒のピース用マーカー（16-31）
+                for (let id = 16; id <= 31; id++) {
+                    const markerItem = createMarkerElement(id, dictionary);
+                    blackMarkersGrid.appendChild(markerItem);
+                }
+
+                console.log('全マーカーの生成完了');
+
+            } catch (error) {
+                console.error('マーカー生成エラー:', error);
+                alert('エラーが発生しました: ' + error.message);
+            }
+        }
+
+        function createMarkerElement(id, dictionary) {
+            const markerItem = document.createElement('div');
+            markerItem.className = 'marker-item';
+
+            // SVGマーカーを生成
+            const svgString = dictionary.generateSVG(id);
+
+            // SVG要素を作成
+            const svgContainer = document.createElement('div');
+            svgContainer.innerHTML = svgString;
+            const svgElement = svgContainer.querySelector('svg');
+
+            if (svgElement) {
+                // SVG要素のサイズを設定
+                svgElement.setAttribute('width', '100%');
+                svgElement.setAttribute('height', '100%');
+                svgElement.style.display = 'block';
+            }
+
+            const label = document.createElement('div');
+            label.className = 'marker-label';
+
+            // IDとピース名を表示
+            const idText = document.createElement('div');
+            idText.textContent = `ID: ${id}`;
+
+            const pieceName = document.createElement('div');
+            pieceName.className = 'piece-name';
+            pieceName.textContent = pieceNames[id];
+
+            label.appendChild(idText);
+            label.appendChild(pieceName);
+
+            markerItem.appendChild(svgContainer);
+            markerItem.appendChild(label);
+
+            return markerItem;
+        }
+
+        // ページ読み込み時にマーカーを生成
+        window.addEventListener('load', () => {
+            try {
+                generateAllMarkers();
+            } catch (error) {
+                console.error('初期化エラー:', error);
+                alert('マーカーの生成に失敗しました: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
