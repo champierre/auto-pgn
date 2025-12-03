@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マーカー付きチェス盤（印刷用）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .print-button {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .print-button:hover {
+            background: #5568d3;
+        }
+
+        .chess-board-container {
+            position: relative;
+            width: 20cm;
+            height: 20cm;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chess-board {
+            width: 16cm;
+            height: 16cm;
+            border: 2px solid #000;
+            display: grid;
+            grid-template-columns: repeat(8, 2cm);
+            grid-template-rows: repeat(8, 2cm);
+        }
+
+        .corner-marker {
+            position: absolute;
+            width: 1.8cm;
+            height: 1.8cm;
+        }
+
+        .corner-marker.a1 {
+            bottom: 0;
+            left: 0;
+        }
+
+        .corner-marker.h1 {
+            bottom: 0;
+            right: 0;
+        }
+
+        .corner-marker.a8 {
+            top: 0;
+            left: 0;
+        }
+
+        .corner-marker.h8 {
+            top: 0;
+            right: 0;
+        }
+
+        .corner-marker svg {
+            width: 100%;
+            height: 100%;
+            border: 1px solid #333;
+            background: white;
+        }
+
+        .corner-label {
+            position: absolute;
+            font-size: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .corner-marker.a1 .corner-label {
+            bottom: -15px;
+            left: 0;
+        }
+
+        .corner-marker.h1 .corner-label {
+            bottom: -15px;
+            right: 0;
+        }
+
+        .corner-marker.a8 .corner-label {
+            top: -15px;
+            left: 0;
+        }
+
+        .corner-marker.h8 .corner-label {
+            top: -15px;
+            right: 0;
+        }
+
+        .chess-square {
+            width: 2cm;
+            height: 2cm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .chess-square.light {
+            background: #f0d9b5;
+        }
+
+        .chess-square.dark {
+            background: #b58863;
+        }
+
+        .square-label {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 8px;
+            color: rgba(0, 0, 0, 0.4);
+            font-weight: bold;
+        }
+
+
+        .instructions {
+            max-width: 600px;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .instructions h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .header,
+            .print-button,
+            .instructions {
+                display: none;
+            }
+
+            .chess-board-container {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>マーカー付きチェス盤（印刷用）</h1>
+        <p>盤面サイズ: 16cm × 16cm（1マス = 2cm × 2cm）</p>
+        <p class="no-print">四隅にArUcoマーカー（ID: 32-35）が配置されています</p>
+    </div>
+
+    <button class="print-button" onclick="window.print()">印刷する</button>
+
+    <div class="chess-board-container">
+        <div class="chess-board" id="chessBoard"></div>
+    </div>
+
+    <div class="instructions">
+        <h2>使い方</h2>
+        <ol>
+            <li>「印刷する」ボタンをクリックして、このページを印刷します</li>
+            <li>A4用紙に実寸（100%）で印刷してください</li>
+            <li>印刷したチェス盤をカメラに映します</li>
+            <li>四隅のマーカーが認識されると、自動的にキャリブレーションされます</li>
+            <li>チェスピースにID:0-31のマーカーを貼り付けて、盤面に配置します</li>
+        </ol>
+        <p style="margin-top: 15px; color: #666; font-size: 0.9em;">
+            <strong>注意:</strong> 印刷時は「実際のサイズ」または「100%」を選択してください。
+            「ページに合わせる」を選択すると、サイズが正確でなくなります。
+        </p>
+    </div>
+
+    <script src="lib/cv.js"></script>
+    <script src="lib/aruco.js"></script>
+    <script>
+        // チェス盤の座標
+        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+        // 四隅のマーカーID
+        const cornerMarkers = [
+            { id: 32, position: 'a1', class: 'a1', label: 'ID:32 (a1)' },
+            { id: 33, position: 'h1', class: 'h1', label: 'ID:33 (h1)' },
+            { id: 34, position: 'a8', class: 'a8', label: 'ID:34 (a8)' },
+            { id: 35, position: 'h8', class: 'h8', label: 'ID:35 (h8)' }
+        ];
+
+        // チェス盤を生成
+        function generateBoard() {
+            const containerDiv = document.querySelector('.chess-board-container');
+            const boardDiv = document.getElementById('chessBoard');
+            const dictionary = new AR.Dictionary('ARUCO');
+
+            // チェス盤のマス目を生成
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = 'chess-square';
+                    square.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
+
+                    // マス目のラベル
+                    const label = document.createElement('span');
+                    label.className = 'square-label';
+                    label.textContent = files[col] + ranks[row];
+                    square.appendChild(label);
+
+                    boardDiv.appendChild(square);
+                }
+            }
+
+            // 四隅のマーカーを盤面の外側に配置
+            cornerMarkers.forEach(marker => {
+                const markerDiv = document.createElement('div');
+                markerDiv.className = 'corner-marker ' + marker.class;
+
+                // SVGマーカーを生成
+                const svgString = dictionary.generateSVG(marker.id);
+                markerDiv.innerHTML = svgString;
+
+                // ラベルを追加
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'corner-label';
+                labelSpan.textContent = marker.label;
+                markerDiv.appendChild(labelSpan);
+
+                containerDiv.appendChild(markerDiv);
+            });
+
+            console.log('マーカー付きチェス盤の生成完了');
+        }
+
+        // ページ読み込み時に生成
+        window.addEventListener('load', () => {
+            try {
+                generateBoard();
+            } catch (error) {
+                console.error('エラー:', error);
+                alert('チェス盤の生成に失敗しました: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

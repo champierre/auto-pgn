@@ -169,6 +169,11 @@
             <div class="markers-grid" id="blackMarkers"></div>
         </div>
 
+        <div class="section">
+            <h2>盤面の四隅用マーカー（ID: 32-35）</h2>
+            <div class="markers-grid" id="cornerMarkers"></div>
+        </div>
+
         <button class="print-button" onclick="window.print()">印刷する</button>
     </div>
 
@@ -210,13 +215,19 @@
             28: 'ポーン5',
             29: 'ポーン6',
             30: 'ポーン7',
-            31: 'ポーン8'
+            31: 'ポーン8',
+            // 盤面の四隅用マーカー (ID 32-35)
+            32: '盤面 a1 (左下)',
+            33: '盤面 h1 (右下)',
+            34: '盤面 a8 (左上)',
+            35: '盤面 h8 (右上)'
         };
 
         // js-aruco2を使用してマーカーを生成
         function generateAllMarkers() {
             const whiteMarkersGrid = document.getElementById('whiteMarkers');
             const blackMarkersGrid = document.getElementById('blackMarkers');
+            const cornerMarkersGrid = document.getElementById('cornerMarkers');
 
             try {
                 // ARUCOディクショナリを使用
@@ -232,6 +243,12 @@
                 for (let id = 16; id <= 31; id++) {
                     const markerItem = createMarkerElement(id, dictionary);
                     blackMarkersGrid.appendChild(markerItem);
+                }
+
+                // 盤面の四隅用マーカー（32-35）
+                for (let id = 32; id <= 35; id++) {
+                    const markerItem = createMarkerElement(id, dictionary);
+                    cornerMarkersGrid.appendChild(markerItem);
                 }
 
                 console.log('全マーカーの生成完了');

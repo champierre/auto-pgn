@@ -43,8 +43,8 @@ h3 {
 .video-container {
     position: relative;
     width: 100%;
-    max-width: 800px;
-    margin: 0 auto 30px;
+    max-width: 400px;
+    margin: 0 auto 20px;
     background: #000;
     border-radius: 10px;
     overflow: hidden;
@@ -107,17 +107,57 @@ button:disabled {
     cursor: not-allowed;
 }
 
+#calibrateBoard {
+    background: #ed8936;
+    color: white;
+}
+
+#calibrateBoard:hover:not(:disabled) {
+    background: #dd6b20;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
+}
+
 .status {
     background: #f7fafc;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 20px;
     border-left: 4px solid #667eea;
+    transition: all 0.3s ease;
+}
+
+.status.status-success {
+    background: #d4edda;
+    border-left-color: #28a745;
+    animation: pulse-success 0.5s ease;
+}
+
+.status.status-error {
+    background: #f8d7da;
+    border-left-color: #dc3545;
+    animation: pulse-error 0.5s ease;
+}
+
+.status.status-info {
+    background: #f7fafc;
+    border-left-color: #667eea;
+}
+
+@keyframes pulse-success {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+@keyframes pulse-error {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
 }
 
 #statusText {
     color: #555;
     font-size: 1.1em;
+    font-weight: 600;
 }
 
 .detected-markers {
@@ -153,6 +193,68 @@ button:disabled {
 .marker-position {
     color: #666;
     font-size: 0.9em;
+}
+
+.board-container {
+    background: #f7fafc;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #ed8936;
+}
+
+.chess-board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: 100%;
+    max-width: 480px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    border: 3px solid #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.chess-square {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8em;
+    font-weight: bold;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.chess-square.light {
+    background: #f0d9b5;
+}
+
+.chess-square.dark {
+    background: #b58863;
+}
+
+.chess-square .square-label {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 0.7em;
+    color: rgba(0, 0, 0, 0.3);
+}
+
+.chess-square .piece {
+    font-size: 2em;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.chess-square .piece-info {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 0.6em;
+    color: #667eea;
+    background: white;
+    padding: 1px 3px;
+    border-radius: 3px;
 }
 
 .info {

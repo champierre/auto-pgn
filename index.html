@@ -4,25 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>チェス棋譜自動記録 - マーカー読み取り</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
     <div class="container">
         <h1>チェスピースマーカー読み取り</h1>
 
-        <div class="video-container">
-            <video id="video" autoplay playsinline></video>
-            <canvas id="canvas"></canvas>
+        <div class="video-container" style="max-width: 350px !important; margin: 0 auto 20px !important;">
+            <video id="video" autoplay playsinline style="max-width: 100%;"></video>
+            <canvas id="canvas" style="max-width: 100%;"></canvas>
         </div>
 
         <div class="controls">
             <button id="startCamera">カメラ起動</button>
             <button id="stopCamera" disabled>カメラ停止</button>
+            <button id="calibrateBoard" disabled onclick="window.calibrateBoard();">盤面キャリブレーション</button>
         </div>
 
         <div class="status">
             <h2>状態</h2>
             <p id="statusText">カメラを起動してください</p>
+            <p id="debugInfo" style="font-size: 0.9em; color: #666; margin-top: 10px;"></p>
+        </div>
+
+        <div class="board-container">
+            <h2>チェス盤面</h2>
+            <div id="chessBoard" class="chess-board"></div>
         </div>
 
         <div class="detected-markers">
@@ -36,6 +43,7 @@
                 <li>「カメラ起動」ボタンをクリックしてカメラを開始</li>
                 <li>チェスピースに貼り付けたArUcoマーカーをカメラに向ける</li>
                 <li>検出されたマーカーのIDと位置が表示されます</li>
+                <li><strong><a href="board-with-markers.html" target="_blank">マーカー付きチェス盤（印刷用）</a> - 四隅マーカー付き16cm×16cmチェス盤</strong></li>
                 <li><a href="all-markers.html" target="_blank">全ピース用マーカー一覧（印刷用）</a> - 32個すべてのマーカーを一度に印刷</li>
                 <li><a href="marker-generator.html" target="_blank">マーカー生成ツール</a> - 個別にマーカーを作成</li>
             </ul>
@@ -44,6 +52,6 @@
 
     <script src="lib/cv.js"></script>
     <script src="lib/aruco.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=20"></script>
 </body>
 </html>
